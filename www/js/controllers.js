@@ -41,44 +41,13 @@ angular.module('starter.controllers', [])
   };
 })
 
-.controller('PlaylistsCtrl', function($scope, $http, $window, $ionicPlatform) {
+.controller('PlaylistsCtrl', function($scope, $ionicPlatform, $q, appService) {
   $scope.playlists = [];
-
-  var authority = "https://login.windows.net/tavikukko365.onmicrosoft.com",
-  redirectUri = "http://ionic365videosnative",
-  resourceUri = "https://tavikukko365.sharepoint.com",
-  clientId = "b7f9b131-4d58-455f-a230-4c6fe381d200",
-  graphApiVersion = "2013-11-08";
-
-  function getVideos(authResponse){
-    $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
-    { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
-      .then(function(result) {
-          result.data.value.forEach(function(val, i) {
-              $scope.playlists.push({ title: val.Title, id: i });
-          });
-      }, function(error) {
-          alert("controlissa: " + error.message);
-      });
-  }
-
   $ionicPlatform.ready(function() {
-
-    var context = new $window.Microsoft.ADAL.AuthenticationContext(authority);
-    context.tokenCache.readItems().then(function (items) {
-        if (items.length > 0) {
-            authority = items[0].authority;
-            context = new $window.Microsoft.ADAL.AuthenticationContext(authority);
-        }
-        // Attempt to authorize user silently
-        context.acquireTokenSilentAsync(resourceUri, clientId)
-        .then(getVideos, function () {
-            // We require user cridentials so triggers authentication dialog
-            context.acquireTokenAsync(resourceUri, clientId, redirectUri)
-            .then(getVideos, function (err) {
-                app.error("Failed to authenticate: " + err);
-            });
-        });
+    appService.getUser("me").then(function(d) {
+      d.user.value.forEach(function(val, i) {
+        $scope.playlists.push({ title: val.Title, id: i });
+      });
     });
   });
 })

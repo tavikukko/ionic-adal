@@ -20,30 +20,7 @@ angular.module('starter', ['ionic', 'starter.controllers'])
       StatusBar.styleDefault();
     }
 */
-/*
-    var authority = "https://login.windows.net/tavikukko365.onmicrosoft.com",
-    redirectUri = "http://ionic365videosnative",
-    resourceUri = "https://tavikukko365.sharepoint.com",
-    clientId = "b7f9b131-4d58-455f-a230-4c6fe381d200",
-    graphApiVersion = "2013-11-08";
 
-  if (typeof Microsoft != 'undefined') {
-    var AuthenticationContext = Microsoft.ADAL.AuthenticationContext;
-
-    AuthenticationContext.createAsync(authority)
-    .then(function (authContext) {
-      authContext.acquireTokenAsync(resourceUri, clientId, redirectUri)
-      .then(function (authResponse) {
-          alert("Token acquired: " + authResponse.accessToken);
-          alert("Token will expire on: " + authResponse.expiresOn);
-      }, function (err) {
-        alert("Failed to authenticate: " + err);
-      });
-    }, function (err) {
-     alert("Failed to authenticate: " + err);
-    });
-  }else{ alert('ei loydy');}
-*/
   });
 })
 
@@ -94,5 +71,62 @@ angular.module('starter', ['ionic', 'starter.controllers'])
     }
   });
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/app/playlists');
-});
+  $urlRouterProvider.otherwise('/app/search');
+})
+
+.factory("appService", ["$http", "$q", "$window", "$ionicPlatform", function ($http, $q, $window, $ionicPlatform) {
+
+    var appService = {};
+
+    appService.getUser = function(path) {
+
+        var deferred = $q.defer();
+        var authority = "https://login.windows.net/tavikukko365.onmicrosoft.com",
+        redirectUri = "http://ionic365videosnative",
+        resourceUri = "https://tavikukko365.sharepoint.com",
+        clientId = "b7f9b131-4d58-455f-a230-4c6fe381d200",
+        graphApiVersion = "2013-11-08";
+        //setup response
+        var user = { user: null, manager: null, directReports: null, files: null };
+
+        var context = new $window.Microsoft.ADAL.AuthenticationContext(authority);
+        context.tokenCache.readItems().then(function (items) {
+           if (items.length > 0) {
+                authority = items[0].authority;
+                context = new $window.Microsoft.ADAL.AuthenticationContext(authority);
+            }
+            // Attempt to authorize user silently
+            context.acquireTokenSilentAsync(resourceUri, clientId)
+            //context.acquireTokenAsync(resourceUri, clientId, redirectUri)
+            .then(function (authResponse){
+                $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
+                { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
+                  .then(function(result) {
+                      user.user = result.data;
+                      deferred.resolve(user);
+                  }, function(error) {
+                      alert("controlissa: " + error.message);
+                  });
+              }, function () {
+                // We require user cridentials so triggers authentication dialog
+                context.acquireTokenAsync(resourceUri, clientId, redirectUri)
+                .then(function (authResponse){
+                    $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
+                    { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
+                      .then(function(result) {
+                          user.user = result.data;
+                          deferred.resolve(user);
+                      }, function(error) {
+                          alert("controlissa: " + error.message);
+                      });
+                  }, function (err) {
+                    alert("Failed to authenticate: " + err);
+                });
+            });
+        });
+        return deferred.promise;
+    };
+
+    return appService;
+}]);
+;
