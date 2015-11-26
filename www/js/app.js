@@ -23,7 +23,12 @@ angular.module('starter', ['ionic', 'starter.controllers'])
 
   });
 })
-
+.constant('adalConfig', {
+  "authority" :"https://login.windows.net/tavikukko365.onmicrosoft.com",
+  "redirectUri" : "http://ionic365videosnative",
+  "resourceUri" : "https://tavikukko365.sharepoint.com",
+  "clientId" : "b7f9b131-4d58-455f-a230-4c6fe381d200"
+})
 .config(function($stateProvider, $urlRouterProvider) {
   $stateProvider
 
@@ -74,30 +79,24 @@ angular.module('starter', ['ionic', 'starter.controllers'])
   $urlRouterProvider.otherwise('/app/search');
 })
 
-.factory("appService", ["$http", "$q", "$window", "$ionicPlatform", function ($http, $q, $window, $ionicPlatform) {
+.factory("appService", ["$http", "$q", "$window", "$ionicPlatform", "adalConfig", function ($http, $q, $window, $ionicPlatform, adalConfig) {
 
     var appService = {};
 
     appService.getUser = function(path) {
 
         var deferred = $q.defer();
-        var authority = "https://login.windows.net/tavikukko365.onmicrosoft.com",
-        redirectUri = "http://ionic365videosnative",
-        resourceUri = "https://tavikukko365.sharepoint.com",
-        clientId = "b7f9b131-4d58-455f-a230-4c6fe381d200",
-        graphApiVersion = "2013-11-08";
         //setup response
         var user = { user: null, manager: null, directReports: null, files: null };
 
-        var context = new $window.Microsoft.ADAL.AuthenticationContext(authority);
+        var context = new $window.Microsoft.ADAL.AuthenticationContext(adalConfig.authority);
         context.tokenCache.readItems().then(function (items) {
            if (items.length > 0) {
                 authority = items[0].authority;
                 context = new $window.Microsoft.ADAL.AuthenticationContext(authority);
             }
             // Attempt to authorize user silently
-            context.acquireTokenSilentAsync(resourceUri, clientId)
-            //context.acquireTokenAsync(resourceUri, clientId, redirectUri)
+            context.acquireTokenSilentAsync(adalConfig.resourceUri, adalConfig.clientId)
             .then(function (authResponse){
                 $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
                 { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
@@ -109,7 +108,7 @@ angular.module('starter', ['ionic', 'starter.controllers'])
                   });
               }, function () {
                 // We require user cridentials so triggers authentication dialog
-                context.acquireTokenAsync(resourceUri, clientId, redirectUri)
+                context.acquireTokenAsync(adalConfig.resourceUri, adalConfig.clientId, adalConfig.redirectUri)
                 .then(function (authResponse){
                     $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
                     { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
