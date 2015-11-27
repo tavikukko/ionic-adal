@@ -84,7 +84,6 @@ angular.module('starter', ['ionic', 'starter.controllers'])
     var appService = {};
 
     appService.authenticte = function(CallBack) {
-        alert("authentictessa");
         var context = new $window.Microsoft.ADAL.AuthenticationContext(adalConfig.authority);
         context.tokenCache.readItems().then(function (items) {
            if (items.length > 0) {
