@@ -83,12 +83,8 @@ angular.module('starter', ['ionic', 'starter.controllers'])
 
     var appService = {};
 
-    appService.getVideos = function() {
-
-        var deferred = $q.defer();
-        //setup response
-        var videos = { video: null };
-
+    appService.authenticte = function(CallBack) {
+        alert("authentictessa");
         var context = new $window.Microsoft.ADAL.AuthenticationContext(adalConfig.authority);
         context.tokenCache.readItems().then(function (items) {
            if (items.length > 0) {
@@ -97,33 +93,30 @@ angular.module('starter', ['ionic', 'starter.controllers'])
             }
             // Attempt to authorize user silently
             context.acquireTokenSilentAsync(adalConfig.resourceUri, adalConfig.clientId)
-            .then(function (authResponse){
-                $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
-                { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
-                  .then(function(result) {
-                      videos.video = result.data;
-                      deferred.resolve(videos);
-                  }, function(error) {
-                      alert("controlissa: " + error.message);
-                  });
-              }, function () {
+            .then(CallBack, function () {
                 // We require user cridentials so triggers authentication dialog
                 context.acquireTokenAsync(adalConfig.resourceUri, adalConfig.clientId, adalConfig.redirectUri)
-                .then(function (authResponse){
-                    $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
-                    { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
-                      .then(function(result) {
-                          videos.video = result.data;
-                          deferred.resolve(videos);
-                      }, function(error) {
-                          alert("controlissa: " + error.message);
-                      });
-                  }, function (err) {
+                .then(CallBack, function (err) {
                     alert("Failed to authenticate: " + err);
                 });
             });
         });
-        return deferred.promise;
+    };
+
+    appService.getVideos = function(authResponse) {
+
+      var deferred = $q.defer();
+      var videos = { video: null };
+
+      $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
+      { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
+        .then(function(result) {
+            videos.video = result.data;
+            deferred.resolve(videos);
+        }, function(error) {
+            alert(error.message);
+      });
+      return deferred.promise;
     };
 
     return appService;

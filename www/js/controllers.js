@@ -44,9 +44,11 @@ angular.module('starter.controllers', [])
 .controller('VideosCtrl', function($scope, $ionicPlatform, $q, appService) {
   $scope.videos = [];
   $ionicPlatform.ready(function() {
-    appService.getVideos().then(function(d) {
-      d.video.value.forEach(function(val, i) {
-        $scope.videos.push({ title: val.Title, id: i ,image: val.ThumbnailUrl});
+    appService.authenticte(function (authResponse) {
+      appService.getVideos(authResponse).then(function(d) {
+        d.video.value.forEach(function(val, i) {
+          $scope.videos.push({ title: val.Title, id: i ,image: val.ThumbnailUrl});
+        });
       });
     });
   });
