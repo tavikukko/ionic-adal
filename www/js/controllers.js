@@ -41,12 +41,12 @@ angular.module('starter.controllers', [])
   };
 })
 
-.controller('PlaylistsCtrl', function($scope, $ionicPlatform, $q, appService) {
-  $scope.playlists = [];
+.controller('VideosCtrl', function($scope, $ionicPlatform, $q, appService) {
+  $scope.videos = [];
   $ionicPlatform.ready(function() {
-    appService.getUser("me").then(function(d) {
-      d.user.value.forEach(function(val, i) {
-        $scope.playlists.push({ title: val.Title, id: i });
+    appService.getVideos().then(function(d) {
+      d.video.value.forEach(function(val, i) {
+        $scope.videos.push({ title: val.Title, id: i ,image: val.ThumbnailUrl});
       });
     });
   });

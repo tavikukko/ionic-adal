@@ -48,11 +48,11 @@ angular.module('starter', ['ionic', 'starter.controllers'])
     }
   })
 
-  .state('app.browse', {
-      url: '/browse',
+  .state('app.home', {
+      url: '/home',
       views: {
         'menuContent': {
-          templateUrl: 'templates/browse.html'
+          templateUrl: 'templates/home.html'
         }
       }
     })
@@ -61,7 +61,7 @@ angular.module('starter', ['ionic', 'starter.controllers'])
       views: {
         'menuContent': {
           templateUrl: 'templates/playlists.html',
-          controller: 'PlaylistsCtrl'
+          controller: 'VideosCtrl'
         }
       }
     })
@@ -76,18 +76,18 @@ angular.module('starter', ['ionic', 'starter.controllers'])
     }
   });
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/app/search');
+  $urlRouterProvider.otherwise('/app/home');
 })
 
 .factory("appService", ["$http", "$q", "$window", "$ionicPlatform", "adalConfig", function ($http, $q, $window, $ionicPlatform, adalConfig) {
 
     var appService = {};
 
-    appService.getUser = function(path) {
+    appService.getVideos = function() {
 
         var deferred = $q.defer();
         //setup response
-        var user = { user: null, manager: null, directReports: null, files: null };
+        var videos = { video: null };
 
         var context = new $window.Microsoft.ADAL.AuthenticationContext(adalConfig.authority);
         context.tokenCache.readItems().then(function (items) {
@@ -101,8 +101,8 @@ angular.module('starter', ['ionic', 'starter.controllers'])
                 $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
                 { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
                   .then(function(result) {
-                      user.user = result.data;
-                      deferred.resolve(user);
+                      videos.video = result.data;
+                      deferred.resolve(videos);
                   }, function(error) {
                       alert("controlissa: " + error.message);
                   });
@@ -113,8 +113,8 @@ angular.module('starter', ['ionic', 'starter.controllers'])
                     $http.get('https://tavikukko365.sharepoint.com/portals/hub/_api/VideoService/Search/Query?querytext=%27%27',
                     { headers: {'Authorization': 'Bearer ' + authResponse.accessToken}})
                       .then(function(result) {
-                          user.user = result.data;
-                          deferred.resolve(user);
+                          videos.video = result.data;
+                          deferred.resolve(videos);
                       }, function(error) {
                           alert("controlissa: " + error.message);
                       });
