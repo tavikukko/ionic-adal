@@ -24,6 +24,10 @@ angular.module('starter.controllers', [])
     $scope.modal.hide();
   };
 
+  $scope.logout = function() {
+      alert("logging out");
+  };
+
   // Open the login modal
   $scope.login = function() {
     $scope.modal.show();
@@ -44,14 +48,26 @@ angular.module('starter.controllers', [])
 .controller('VideosCtrl', function($scope, $ionicPlatform, $q, appService) {
   $scope.videos = [];
   $ionicPlatform.ready(function() {
-    appService.authenticte(function (authResponse) {
-      appService.getVideos(authResponse).then(function(d) {
-        d.video.value.forEach(function(val, i) {
-          $scope.videos.push({ title: val.Title, id: i ,image: val.ThumbnailUrl});
-        });
-      });
-    });
+    appService.authenticte("https://graph.microsoft.com", function (authResponse) {
+      appService.getMe(authResponse).then(function(d) {
+         var user = d.me.data.userPrincipalName;
+         var tenant = user.substring(user.indexOf('@')+1);
+         tenant = tenant.substring(0, tenant.indexOf('.'));
+         appService.authenticte("https://"+tenant+".sharepoint.com", function (authResponse) {
+           appService.getVideos(tenant, authResponse).then(function(d) {
+             d.video.value.forEach(function(val, i) {
+               $scope.videos.push({ title: val.Title, id: i ,image: val.ThumbnailUrl});
+             });
+            });
+          });
+       });
+     });
   });
+})
+
+.controller('HomeCtrl', function($scope, $stateParams, $window) {
+$scope.me = "tomi.tavela@kokonuts.com";
+
 })
 
 .controller('PlaylistCtrl', function($scope, $stateParams, $window) {
